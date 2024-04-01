@@ -24,6 +24,12 @@ function EntryManager:defineEntry(entry, options)
         tags = objects.Set(options.tags or {}),
         entry = entry
     }
+    for k,v in pairs(options) do
+        -- Allow user to input custom data into the entry object
+        if not entryObj[k] then
+            entryObj[k] = v
+        end
+    end
 
     local tags = options.tags or {}
     for _, tag in tags do
@@ -33,6 +39,12 @@ function EntryManager:defineEntry(entry, options)
     end
     self.entries:add(entryObj)
     self.nameToEntryObject[entry] = entryObj
+end
+
+
+
+function EntryManager:getEntryObject(entry)
+    return self.nameToEntryObject[entry]
 end
 
 

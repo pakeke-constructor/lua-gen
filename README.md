@@ -12,7 +12,7 @@ rng = RNGState()
 gen:addEntry("mod:grass", {
     chance = 1, -- (default=1)
 
-    -- pools are string keywords that we can query for
+    -- tags are string keywords that we can query for
     tags = {"a", "b", "c"},
 
     -- traits are key-val pairs that we can also query for
@@ -47,12 +47,16 @@ local query = gen:createQuery({
         return options.traits.requiredLevel > 2
     end,
     chance = function(entry, options)
-        -- we can return a custom chance for our entry!
+        -- we can provide a custom chance for each entry!
         -- (could use question-buses internally with this)
-        return entry.chance or 1
+        return options.chance or 1
         -- (this ^^^^ is the code used by default)
+        -- (NOTE: `options` is the table passed in by :addEntry() function)
     end
 })
+
+-- if there are no results to pick from,
+-- `query` will be nil.
 
 
 
@@ -65,9 +69,18 @@ local x = gen:query({
 
 
 -- generate 3 random entries:
-local x1 = query(...)
-local x2 = query(...) -- can pass varargs.
-local x3 = query(...)
+local x1 = query()
+local x2 = query()
+local x3 = query()
+
+--[[
+    TODO:
+    Could be pass xtra args into the query?
+        IDEA:
+]]
+local x = query({
+    retry = shouldRetry
+})
 
 
 ```
@@ -97,11 +110,6 @@ local query2 = query
 # Architecture:
 
 ```mermaid
-
-
-graph TD;
-    Generator --> PoolManager
-
 
 ```
 

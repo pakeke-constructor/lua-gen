@@ -112,56 +112,6 @@ end
 
 
 
-local self = {}
-local PROBS = {
-    0.0001,0.02,0.4, 0.57
-}
-UniformPicker.init(self, PROBS)
-
--- print("PROB:")
--- for k,v in pairs(self.prob) do
---     print(k,v)
--- end
--- print("ALIAS:")
--- for k,v in pairs(self.alias) do
---     print(k,v)
--- end
-
-
-
-local picks = {}
-for i=1, #PROBS do
-    picks[i] = 0
-end
-
-local r=love.math.random
-for i=1, 10000100 do
-    local x = UniformPicker.pick(self, r(), r())
-    picks[x] = picks[x] + 1
-end
-
-
-
-
-local function normalizeTable(tabl)
-    local tot = 0
-    for k,v in pairs(tabl)do 
-        tot = tot + v
-    end
-    for k,v in pairs(tabl)do 
-        tabl[k] = tabl[k] / tot
-    end
-end
-
-normalizeTable(picks)
-normalizeTable(PROBS)
-
-for k,v in pairs(picks) do
-    print("EXPECTED, GOT: ", PROBS[k], picks[k])
-end
-
-
-
 return UniformPicker
 
 
