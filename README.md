@@ -13,7 +13,7 @@ gen = Generator(rng or nil)
 
 -- defines an entry for the generation context
 gen:defineEntry("mod:grass", {
-    chance = 1,
+    defaultChance = 1,
     traits = {
         overworld = true,
         plant = true,
@@ -138,4 +138,19 @@ local x2 = q()
 
 
 
+# SUPER IMPORTANT QUESTION:
+When we do this:
+```lua
+query
+    :addEntriesWith("foo")
+    :addEntriesWith("bar")
+```
+If there is an entry with BOTH foo AND bar,
+then, that entry's probability will be duplicated by 2.
+
+Is this the behaviour that we want...?
+Prooooobably not.... but the concept behind it is still useful!
+Do some thinking. It's related to `:add` behaviour.
+
+Hmmm.. this will be annoying...
 

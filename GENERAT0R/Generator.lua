@@ -39,7 +39,7 @@ end
 
 function Generator:defineEntry(entry, options)
     local entryObj = {
-        chance = options.chance or 1,
+        defaultChance = options.defaultChance or 1,
         traits = options.traits or {},
         entry = entry
     }
@@ -71,6 +71,12 @@ function Generator:getEntries(traits)
         set = objects.Set(self.allEntries)
     end
     return set
+end
+
+
+function Generator:getInfo(entry)
+    -- gets info about an entry
+    return self.nameToEntryObj[entry]
 end
 
 

@@ -5,16 +5,6 @@ local Picker = require("Picker")
 local Query = objects.Class("generation:Query")
 
 
-
-local function finalize(self)
-    if self:isEmpty() then
-        error("Cannot finalize query! (There are no possible results.)")
-    end
-    self.picker = Picker(self.picks)
-end
-
-
-
 local ARGS = {"rng", "generator"}
 function Query:init(args)
     typecheck.assertKeys(args, ARGS)
@@ -41,6 +31,8 @@ end
 
 
 
+local finalize
+
 function Query:__call()
     -- executing a query:
     if self.outdated then
@@ -63,6 +55,18 @@ function Query:isEmpty()
 end
 
 
+local function newPick(entry, chance)
+    return {
+        entry = entry,
+        chance = chance
+    }
+end
+
+
+local function markOutdated(self)
+    self.outdated = true
+end
+
 
 local addTc = typecheck.assert("table", "any", "number")
 
@@ -80,17 +84,89 @@ function Query:add(entry_or_query, chance)
         local pick = self.seenPicks[entry_or_query]
         pick.chance = pick.chance + chance
     else
-        local pick = {
-            chance = chance,
-            entry = entry_or_query
-        }
+        local pick = newPick(entry_or_query, chance)
         self.rawPicks:add(pick)
         self.seenPicks[entry_or_query] = pick
     end
 
-    self.outdated = true
+    markOutdated(self)
     return self
 end
+
+
+function Query:filter(f)
+    self.filters:add(f)
+    markOutdated(self)
+end
+
+function Query:adjustChances(f)
+    self.chanceAdjusters:add(f)
+    markOutdated(self)
+end
+
+
+function Query:addEntriesWith(...)
+    --[[
+        adds entries with ALL of the traits listed.
+    ]]
+    local traits = {...}
+
+end
+
+
+
+function Query:addAllEntries()
+
+end
+
+
+
+local function getTraits(self, entry)
+    return self.generator:getInfo(entry).traits
+end
+
+
+local function applyFilters(self, pick)
+    local entry = pick.entry
+    local traits, chance = getTraits(entry), pick.chance
+
+    for _, f in ipairs(self.filters) do
+        local ok = f(entry, traits, chance)
+        if not ok then
+            return false
+        end
+    end
+    return true
+end
+
+
+local function applyChanceAdjustment(self, pick)
+    local entry = pick.entry
+    local traits = getTraits(entry)
+    local newChance = pick.chance
+
+    for _, adjustChance in ipairs(self.chanceAdjusters) do
+        newChance = adjustChance(entry, traits, newChance)
+    end
+
+    return newPick(pick.entry, newChance)
+end
+
+
+
+function finalize(self)
+    if self:isEmpty() then
+        error("Cannot finalize query! (There are no possible results.)")
+    end
+    local picks = self.rawPicks
+        :filter(applyFilters)
+        :map(applyChanceAdjustment)
+    self.picker = Picker(picks)
+    self.outdated = false
+end
+
+
+
 
 
 return Query
