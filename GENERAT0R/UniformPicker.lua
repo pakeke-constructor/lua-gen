@@ -18,10 +18,10 @@ https://www.keithschwarz.com/darts-dice-coins/
 ]]
 
 
-local UniformPicker = {} --objects.Class("generation:UniformPicker")
+local Picker = objects.Class("generation:Picker")
 
 
-function UniformPicker:init(pickList) 
+function Picker:init(pickList) 
     --[[
         pickList = {
             {chance=X, entry=X},
@@ -104,7 +104,10 @@ local function pickIndex(self, rand, rand2)
 end
 
 
-function UniformPicker:pick(rand1, rand2)
+--[[
+    The Vose Alias method requires TWO random variables to work properly.
+]]
+function Picker:pick(rand1, rand2)
     local i = pickIndex(self, rand1, rand2)
     return self.entryList[i]
 end
@@ -112,7 +115,7 @@ end
 
 
 
-return UniformPicker
+return Picker
 
 
 

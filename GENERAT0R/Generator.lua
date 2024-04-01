@@ -1,6 +1,6 @@
 
 local EntryManager = require("EntryManager")
-local UniformPicker = require("UniformPicker")
+local Query = require("Query")
 
 
 local Generator = objects.Class("generation:Generator")
@@ -18,50 +18,54 @@ end
 
 
 
+local EMPTY = {}
 
 
+local queryTc = typecheck.assert("table", "table")
 function Generator:createQuery(args)
     --[[
         args = {
             from = {...},
-            rng = RNGObject(),
-            filter = func,
-            chance = func
+            rng = RNGObject() or nil,
+            filter = func or nil,
+            chance = func or nil
         }
     ]]
-    typecheck.assertKeys(args, {"from"})
+    queryTc(self, args)
 
+    local from = args.from or EMPTY
     local filter = args.filter or truthy
-    local chance = args.chance or defaultChance
+    local chanceFunc = args.chance or defaultChance
 
     -- get the entries, and filter them:
-    local entries = self.entryManager:getEntries(args.from)
+    local query = Query()
+    self.entryManager:getEntries(from)
         :filter(filter)
         :map(function(entryObj)
             local entry = entryObj.entry
-            return {
-                entry = entry,
-                chance = chance(entry, entryObj)
-            }
+            local chance = chanceFunc(entry, entryObj)
+            query:add(entry, chance)
         end)
 
-    local rng = args.rng or self.rng
-    local picker = UniformPicker(entries)
-    
-    local function pick()
-        local r1 = rng:random()
-        local r2 = rng:random()
-        return picker:pick(r1,r2)
-    end
-    return pick
+    return query
 end
 
 
 
 function Generator:query(args)
     --[[
-        same as :createQuery(...), except executes instantly
+        same as :createQuery(...), except executes instantly.
+
+        WARNING!!!!
+        This function is VERY INEFFICIENT!!!!
+        If you want more efficieny code, create a query once, 
+        and reuse it elsewhere.
+
+        TODO:
+        Should we remove this???
+        Probably...
     ]]
+    queryTc(self, args)
     local query = self:createQuery(args)
     return query()
 end
