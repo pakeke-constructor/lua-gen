@@ -15,13 +15,15 @@ end
 
 
 
-local ARGS = {"rng", "entryManager"}
+local ARGS = {"rng", "generator"}
 function Query:init(args)
-    -- note:
-    -- you won't need to modify ANY of these fields outside this module.
     typecheck.assertKeys(args, ARGS)
 
-    self.entryToPick = {--[[
+    -- you won't need to modify ANY of these fields outside this module.
+    self.rng = args.rng
+    self.generator = args.generator
+
+    self.seenPicks = {--[[
         [entry] -> {chance=X, entry=X}
     ]]}
     self.picks = objects.Array(--[[
@@ -72,12 +74,19 @@ function Query:add(entry_or_query, chance)
         We dont want querys querying themselves.... thatd be bad
     ]]
     addTc(self, entry_or_query, chance)
-    local pick = {
-        chance = chance,
-        entry = entry_or_query
-    }
-    self.picks:add(pick)
-    self.entryToPick[entry_or_query] = pick
+
+    if self.seenPicks[entry_or_query] then
+        -- The pick already exists. So, just increase the chance:
+        local pick = self.seenPicks[entry_or_query]
+        pick.chance = pick.chance + chance
+    else
+        local pick = {
+            chance = chance,
+            entry = entry_or_query
+        }
+        self.rawPicks:add(pick)
+        self.seenPicks[entry_or_query] = pick
+    end
 
     self.outdated = true
     return self

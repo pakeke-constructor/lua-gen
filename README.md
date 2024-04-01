@@ -8,15 +8,15 @@ rng = RNGState()
 gen = Generator(rng or nil)
 
 
+
+
+
 -- defines an entry for the generation context
 gen:defineEntry("mod:grass", {
-    chance = 1, -- (default=1)
-
-    -- traits are key-val pairs that we can query/filter for:
+    chance = 1,
     traits = {
         overworld = true,
         plant = true,
-
         rarity = 5,
         level = 2
     }
@@ -63,7 +63,7 @@ local query = gen:createQuery()
 
 
 -- We can also filter entries:
-query:filter(function(entry, traits, chance) 
+query:filter(function(entry, traits, chance)
     -- filters away entries that are less than level 2
     return traits.level > 2
 end)
@@ -92,4 +92,50 @@ local customQuery = gen:createQuery()
 
 
 ```
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+# Architecture / pipeline flow:
+
+Lets plan out:
+What should happen when I call these functions?
+```lua
+local q = gen:createQuery()
+    :addEntriesWith("item")
+    :filter(f)
+    :adjustChances(f2)
+
+local x = q()
+
+q:add("mod:ent", 1)
+
+local x2 = q()
+```
+
+## Control flow annotated:
+```lua
+local q = gen:createQuery()
+    :addEntriesWith("item")
+    -- pick objects added to .allPicks
+    :filter(f1)
+    -- `f1` pushed to filter stack
+    :adjustChances(c1)
+    -- `c1` pushed to chance stack
+
+-- Pick objects (from allPicks) are filtered and chance-adjusted.
+--  Picker object is created.
+local x = q()
+
+q:add("mod:ent", 1)
+
+local x2 = q()
+```
+
+
+
 
