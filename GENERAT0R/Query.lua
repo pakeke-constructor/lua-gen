@@ -8,7 +8,7 @@ local Query = objects.Class("generation:Query")
 
 local function finalize(self)
     if self:isEmpty() then
-        error("Cannot finalize query! There are no possible results.")
+        error("Cannot finalize query! (There are no possible results.)")
     end
     self.picker = Picker(self.picks)
 end
@@ -17,12 +17,19 @@ end
 
 local ARGS = {"rng", "entryManager"}
 function Query:init(args)
-    typecheck.assertKeys(args, ARGS)
     -- note:
-    -- you shouldn't be modifying any of these fields outside this module.
+    -- you won't need to modify ANY of these fields outside this module.
+    typecheck.assertKeys(args, ARGS)
+
+    self.entryToPick = {--[[
+        [entry] -> {chance=X, entry=X}
+    ]]}
     self.picks = objects.Array(--[[
         {chance=X, entry=X}
     ]])
+
+    self.filters = objects.Array()
+    self.chanceAdjusters = objects.Array()
 
     self.outdated = true
     self.picker = nil
@@ -65,11 +72,15 @@ function Query:add(entry_or_query, chance)
         We dont want querys querying themselves.... thatd be bad
     ]]
     addTc(self, entry_or_query, chance)
-    self.picks:add({
+    local pick = {
         chance = chance,
         entry = entry_or_query
-    })
+    }
+    self.picks:add(pick)
+    self.entryToPick[entry_or_query] = pick
+
     self.outdated = true
+    return self
 end
 
 
