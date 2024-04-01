@@ -21,7 +21,7 @@ function EntryManager:defineEntry(entry, options)
     local entryObj = {
         chance = options.chance or 1,
         traits = options.traits or {},
-        tags = options.tags or {},
+        tags = objects.Set(options.tags or {}),
         entry = entry
     }
 
