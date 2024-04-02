@@ -80,9 +80,9 @@ function Query:add(entry_or_query, chance)
     addTc(self, entry_or_query, chance)
 
     if self.seenPicks[entry_or_query] then
-        -- The pick already exists. So, just increase the chance:
+        -- The pick already exists. So, overwrite the chance:
         local pick = self.seenPicks[entry_or_query]
-        pick.chance = pick.chance + chance
+        pick.chance = chance
     else
         local pick = newPick(entry_or_query, chance)
         self.rawPicks:add(pick)
@@ -105,25 +105,36 @@ function Query:adjustChances(f)
 end
 
 
+
+
+local function getTraits(self, entry)
+    return self.generator:getTraits(entry)
+end
+local function getDefaultChance(self, entry)
+    return self.generator:getDefaultChance(entry)
+end
+
+
+
 function Query:addEntriesWith(...)
     --[[
         adds entries with ALL of the traits listed.
     ]]
     local traits = {...}
-
+    local entries = self.generator:getEntriesWith(traits)
+    for _, entry in ipairs(entries) do
+        self:add(entry, getDefaultChance(entry))
+    end
 end
 
 
 
 function Query:addAllEntries()
-
+    for _, entry in ipairs(self.generator:getAllEntries()) do
+        self:add(entry, getDefaultChance(entry))
+    end
 end
 
-
-
-local function getTraits(self, entry)
-    return self.generator:getInfo(entry).traits
-end
 
 
 local function applyFilters(self, pick)
@@ -142,8 +153,8 @@ end
 
 local function applyChanceAdjustment(self, pick)
     local entry = pick.entry
-    local traits = getTraits(entry)
     local newChance = pick.chance
+    local traits = getTraits(entry)
 
     for _, adjustChance in ipairs(self.chanceAdjusters) do
         newChance = adjustChance(entry, traits, newChance)

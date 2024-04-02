@@ -23,7 +23,7 @@ end
 function Generator:init()
     self.rng = love.math.newRandomGenerator()
 
-    self.tagToEntries = {--[[
+    self.traitToEntries = {--[[
         [tag] -> Set([entryObj, entryObj, ...])
     ]]}
 
@@ -45,39 +45,66 @@ function Generator:defineEntry(entry, options)
     }
 
     for _, trait in pairs(entryObj.traits) do
-        local set = self.tagToEntries[trait] or objects.Set()
-        self.tagToEntries[trait] = set
+        local set = self.traitToEntries[trait] or objects.Set()
+        self.traitToEntries[trait] = set
         set:add(entry)
     end
 
-    self.allEntries:add(entryObj)
+    self.allEntries:add(entry)
     self.nameToEntryObj[entry] = entryObj
 end
 
 
 
+local function findSmallestTraitSet(self, traits)
+    --[[
+        finds the trait that has the smallest number of entries,
+        from a given list of traits.
+    ]]
+    local bestSize = math.huge
+    local set = nil
 
-function Generator:getEntries(traits)
-    local set
-    if #traits > 0 then
-        set = objects.Set()
-        for _, tag in ipairs(traits) do
-            for _, entryObj in ipairs(self.tagToEntries[tag]) do
-                set:add(entryObj)
-            end
+    for _, t in ipairs(traits) do
+        local traitSet = self.traitToEntries[t]
+        local size = #traitSet
+        if size < bestSize then
+            bestSize = size
+            set = traitSet
         end
-    else
-        -- defensive copy.
-        set = objects.Set(self.allEntries)
     end
     return set
 end
 
 
-function Generator:getInfo(entry)
-    -- gets info about an entry
-    return self.nameToEntryObj[entry]
+function Generator:getEntriesWith(traits)
+    if #traits == 1 then
+        -- shortcircuit for efficiency
+        return self.traitToEntries[traits[1]]
+    end
+
+    local entrySet = findSmallestTraitSet(self, traits)
+    for _, trait in ipairs(traits) do
+        local traitSet = self.traitToEntries[trait]
+        entrySet = entrySet:intersection(traitSet)
+    end
+    return entrySet
 end
+
+
+function Generator:getAllEntries()
+    return self.allEntries
+end
+
+
+local EMPTY = {}
+function Generator:getTraits(entry)
+    return self.nameToEntryObj[entry].traits or EMPTY
+end
+
+function Generator:getDefaultChance(entry)
+    return self.nameToEntryObj[entry].defaultChance or 1
+end
+
 
 
 
